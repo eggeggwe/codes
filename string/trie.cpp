@@ -1,23 +1,31 @@
-long long int dp[5050];
-bitset<1000010> stop;
-int trie[1000010][26];
-int cnt=0;
-void insert(string s){
-    int node=0;
-    for(int i=0;i<s.size();i++){
-        if(trie[node][s[i]-'a']==0)trie[node][s[i]-'a']=++cnt;
-        node=trie[node][s[i]-'a'];
+struct Trie {
+    struct Node {
+        int nxt[26];
+        int cnt = 0; // 該節點作為結尾的單詞數量
+        Node() { memset(nxt, 0, sizeof(nxt)); }
+    };
+
+    vector<Node> tree;
+
+    Trie() {
+        tree.emplace_back(); // 0 號根節點
     }
-    stop[node]=1;
-}
-string s;
-long long int search(int x){
-    int node=0;
-    long long int ans=0;
-    for(int i=x;i<s.size();i++){
-        if(trie[node][s[i]-'a']==0)return ans;
-        node=trie[node][s[i]-'a'];
-        if(stop[node])(ans+=dp[i+1])%=MOD;
+
+    void clear() {
+        tree.clear();
+        tree.emplace_back();
     }
-    return ans;
-}
+
+    void insert(const string &s) {
+        int u = 0;
+        for (char c : s) {
+            int idx = c - 'a';
+            if (!tree[u].nxt[idx]) {
+                tree[u].nxt[idx] = tree.size();
+                tree.emplace_back();
+            }
+            u = tree[u].nxt[idx];
+        }
+        tree[u].cnt++;
+    }
+};

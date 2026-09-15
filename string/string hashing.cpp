@@ -1,29 +1,35 @@
-struct hash_string{
-    vector<long long int> power;
-    vector<long long int> table;
-    long long int Prime_A;
-    long long int Prime_B;
-    string s;
-    void init(int length,long long int primea,long long int primeb,string tmp2){
-        power.resize(length+1);
-        table.resize(length+1);
-        Prime_A=primea;
-        Prime_B=primeb;
-        s=tmp2;
-        power[0]=1;
-        for(int i=1;i<=length;i++){
-            power[i]=(power[i-1]*Prime_A)%Prime_B;
-        }
-        table[0]=0;
-        for(int i=0;i<s.size();i++){
-            table[i+1]=((table[i]*Prime_A)%Prime_B+s[i])%Prime_B;
+struct HashString {
+    int n;
+    static const long long MOD1 = 1e9 + 7, MOD2 = 1e9 + 9;
+    static const long long B1 = 313, B2 = 317;
+ 
+    vector<long long> h1, h2, p1, p2;
+ 
+    void init(const string &s) {
+        n = s.size();
+        h1.assign(n + 1, 0);
+        h2.assign(n + 1, 0);
+        p1.assign(n + 1, 1);
+        p2.assign(n + 1, 1);
+ 
+        for (int i = 0; i < n; i++) {
+            long long c = (unsigned char)s[i];
+            h1[i + 1] = (h1[i] * B1 + c) % MOD1;
+            h2[i + 1] = (h2[i] * B2 + c) % MOD2;
+            p1[i + 1] = (p1[i] * B1) % MOD1;
+            p2[i + 1] = (p2[i] * B2) % MOD2;
         }
     }
-    long long int search(long long int a,long long int b){
-        if(table[b]>=(table[a-1]*power[b-a+1])%Prime_B){
-            return table[b]-(table[a-1]*power[b-a+1])%Prime_B;
-        }else{
-            return (table[b]+Prime_B-(table[a-1]*power[b-a+1])%Prime_B)%Prime_B;
-        }
+ 
+    pll query(int l, int r) const {
+        if (r < l) return {0, 0};
+        long long val1 = (h1[r + 1] - h1[l] * p1[r - l + 1]) % MOD1;
+        if (val1 < 0) val1 += MOD1;
+ 
+        long long val2 = (h2[r + 1] - h2[l] * p2[r - l + 1]) % MOD2;
+        if (val2 < 0) val2 += MOD2;
+ 
+        return {val1, val2};
     }
 };
+ 

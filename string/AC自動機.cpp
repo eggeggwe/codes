@@ -1,40 +1,75 @@
-struct AC_auto{
-    struct node{
-        int lf,next[26];//fail link,'next' use for trie
-        node(int value){memset(next,value,sizeof(next));};
+struct AC_auto {
+    struct node {
+        int lf = 0;       // fail link
+        int next[26];     // 字典樹邊 / Trie 圖轉移
+        node() { memset(next, 0, sizeof(next)); }
     };
+
     vector<node> trie;
-    vector<int> exist;
-    vector<int> bfs;
-    AC_auto():trie(1,-1){}
-    int insert(string &s,int l){
-        int p=0;
-        for(int i=0;i<l;i++){
-            int c=(s[i]-'a');
-            if(trie[p].next[c]==-1){
-                trie[p].next[c]=trie.size();
-                trie.push_back(-1);
+    vector<int> exist;    // 記錄節點是否為單詞結尾（或包含幾個單詞）
+    vector<int> bfs;      // 同時作為拓撲排序順序
+
+    AC_auto() {
+        trie.emplace_back(); // 根節點 0
+        exist.assign(1, 0);  // 同步初始化
+    }
+
+    int insert(const string &s) {
+        int p = 0;
+        for (char ch : s) {
+            int c = ch - 'a';
+            if (!trie[p].next[c]) {
+                trie[p].next[c] = trie.size();
+                trie.emplace_back();
                 exist.push_back(0);
             }
-            p=trie[p].next[c];
+            p = trie[p].next[c];
         }
         exist[p]++;
-        return p;
+        return p; // 回傳該單詞在 Trie 中的結尾節點編號
     }
-    void build(){
-        trie[0].lf=trie.size();
-        trie.push_back(0);
-        bfs.push_back(0);
-        for(int i=0;i<bfs.size();i++){
-            int now=bfs[i];
-            int Pre=trie[now].lf;
-            for(int k=0;k<26;k++){
-                int &next=trie[now].next[k];
-                int Pre_next=trie[Pre].next[k];
-                if(next==-1)next=Pre_next;
-                else trie[next].lf=Pre_next,bfs.push_back(next);
+
+    void build() {
+        bfs.clear();
+        queue<int> q;
+        // 將深度為 1 的節點加入隊列，其 fail 預設為 0
+        for (int c = 0; c < 26; c++) {
+            if (trie[0].next[c]) {
+                q.push(trie[0].next[c]);
             }
         }
-        return;
+
+        while (!q.empty()) {
+            int now = q.front();
+            q.pop();
+            bfs.push_back(now);
+
+            for (int c = 0; c < 26; c++) {
+                int &next = trie[now].next[c];
+                int fail_next = trie[trie[now].lf].next[c];
+                if (next) {
+                    trie[next].lf = fail_next;
+                    q.push(next);
+                } else {
+                    next = fail_next; // Trie 圖路徑壓縮
+                }
+            }
+        }
+    }
+
+    // 拓撲優化查詢：統計每個節點被匹配到的次數，O(|T| + |Trie|)
+    vector<int> query_freq(const string &t) {
+        vector<int> cnt(trie.size(), 0);
+        int p = 0;
+        for (char ch : t) {
+            p = trie[p].next[ch - 'a'];
+            cnt[p]++;
+        }
+        // 依照 BFS 反向（拓撲逆序）將貢獻推回 fail 祖先
+        for (int i = (int)bfs.size() - 1; i >= 0; i--) {
+            int u = bfs[i];
+            cnt[trie[u].lf] += cnt[u];
+        }
+        return cnt;
     }
 };
