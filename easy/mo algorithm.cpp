@@ -1,84 +1,68 @@
 #include <bits/stdc++.h>
 using namespace std;
-int n,q;
-long long int BB=25;
-long long int AA=317;
-long long int a[100010];
-long long int ans[100010];
-unordered_set<int> ccnt[100010];
-vector<tuple<int,int,int> > use;
-unordered_set<int> num;
-long long int cnt=0;
 
-void ad(int x,int i){
-    if(a[x]<i*BB || a[x]>=(i+1)*BB)return;
-    if(num.count(a[x])==1){
-        cnt++;
-        num.erase(a[x]);
-    }else{
-        num.insert(a[x]);
+const int BLOCK_SIZE = 316; // 建議設為 N / sqrt(Q) 或 ~320
+
+struct Query {
+    int l, r, id;
+    bool operator<(const Query &other) const {
+        int b1 = l / BLOCK_SIZE;
+        int b2 = other.l / BLOCK_SIZE;
+        if (b1 != b2) return b1 < b2;
+        // 奇偶區塊排序優化，減少指針來回晃動
+        return (b1 & 1) ? (r < other.r) : (r > other.r);
     }
-    return;
+};
+
+int n, q;
+int a[100010];
+int cnt[100010]; // 記錄每個數字當前出現次數
+int ans[1000010];
+int cur_pairs = 0;
+vector<Query> queries;
+
+inline void add(int val) {
+    cnt[val]++;
+    if ((cnt[val] & 1) == 0) { // 奇數變偶數，湊成新的一對
+        cur_pairs++;
+    }
 }
-void pp(int x,int i){
-    if(a[x]<i*BB || a[x]>=(i+1)*BB)return;
-    if(num.count(a[x])==0){
-        cnt--;
-        num.insert(a[x]);
-    }else{
-        num.erase(a[x]);
+
+inline void remove(int val) {
+    if ((cnt[val] & 1) == 0) { // 偶數變奇數，拆散一對
+        cur_pairs--;
     }
+    cnt[val]--;
 }
 
 int main() {
-    ios::sync_with_stdio(0),cin.tie(0);
-    cin>>n>>q;
-    long long int MMMax=0;
-    sort(use.begin(),use.end(),[&](tuple<int,int,int> A,tuple<int,int,int> B){
-        return (make_pair(get<0>(A)/AA,get<1>(A))<make_pair(get<0>(B)/AA,get<1>(B)));
-    });
-    for(int i=0;i<MMMax/BB+1;i++){
-        int curL=1,curR=0;
-        for(auto u:use){
-            int l=get<0>(u),r=get<1>(u);
-            int id=get<2>(u); 
-            while(curL<l){
-                pp(curL,i);
-                curL++;
-            }
-            while(curR>r){
-                pp(curR,i);
-                curR--;
-            }
-            while(curR<r){
-                curR++;
-                ad(curR,i);
-                // curR++;
-            }
-            
-            while(curL>l){
-                curL--;
-                ad(curL,i);
-                // curL--;
-            }
-            ans[id]+=cnt;
-            for(auto u:num){
-                if(ccnt[id].count(u)==1){
-                    ans[id]++;
-                    ccnt[id].erase(u);
-                }else{
-                    ccnt[id].insert(u);
-                }
-            }
-        }
-        for(int j=0;j<q;j++){
-            ccnt[j].clear();
-        }
-        num.clear();
-        cnt=0;
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    cin>>n;
+    for (int i = 1; i <= n; i++) cin >> a[i];
+
+    cin >> q;
+    queries.assign(q,Query());
+    for (int i = 0; i < q; i++) {
+        cin >> queries[i].l >> queries[i].r;
+        queries[i].id = i;
     }
-    for(int i=0;i<q;i++){
-        cout<<ans[i]<<'\n';
+
+    sort(queries.begin(), queries.end());
+
+    int curL = 1, curR = 0;
+    for (const auto &qry : queries) {
+        while (curL > qry.l) add(a[--curL]);
+        while (curR < qry.r) add(a[++curR]);
+        while (curL < qry.l) remove(a[curL++]);
+        while (curR > qry.r) remove(a[curR--]);
+        ans[qry.id] = cur_pairs;
     }
+
+    for (int i = 0; i < q; i++) {
+        cout << ans[i] << "\n";
+    }
+
     return 0;
 }
