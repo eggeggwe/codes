@@ -1,159 +1,150 @@
-#include<iostream>
-#include<algorithm>
-#include<stdio.h>
-#include <queue>
-#include<string.h>
+#include <iostream>
+#include <algorithm>
+#include <vector>
 using namespace std;
+
 typedef long long ll;
-#define N 500010
-struct nice{
-    int to,next;
+const int N = 100010;
+const int M = 300010;
+const ll INF = 1e18;
+
+struct Edge {
+    int u, v;
     ll weight;
-}edges[N << 1];
+    bool in_mst;
+} edge[M];
 
-struct NICE{
-    int u,v;
+struct Adj {
+    int to;
     ll weight;
-}edge[N << 1];
-int n,m;
-ll fa[N],w[N][32],ww[N][32];
+};
 
-bool cmp(NICE a,NICE b)
-{
-    return a.weight<b.weight;
+int n, m;
+int fa[N];
+vector<Adj> g[N];
+
+bool cmp(const Edge &a, const Edge &b) {
+    return a.weight < b.weight;
 }
 
-int find(int x)
-{
-    while(x!=fa[x]) x = fa[x] = fa[fa[x]];
-    return x;
+int find(int x) {
+    return (fa[x] == x) ? x : (fa[x] = find(fa[x]));
 }
 
-int head[N],indexx = 1;
-void wirte(int x,int y,ll z)
-{
-    edges[indexx].weight = z;
-    edges[indexx].to = y;
-    edges[indexx].next = head[x];
-    head[x] = indexx++;
-}
+ll mst_weight = 0;
+int edges_count = 0;
 
-int times = 0;
-ll ass = 0;
-ll maxw = 0;
-void kruskal(){
-    sort(edge+1,edge+m+1,cmp);
-    for(int i = 1;i<=m;i++)
-    {
-        int eu = find(edge[i].u),ev = find(edge[i].v);
-        //cout <<find(u) << ' ' << find(v) << ' ' << endl;
-        if(eu == ev)continue;
-        //cout << "check"<<endl;
-        ass+=edge[i].weight;
-        maxw = max(maxw,edge[i].weight);
+void kruskal() {
+    for (int i = 1; i <= n; i++) fa[i] = i;
+    sort(edge + 1, edge + m + 1, cmp);
+    for (int i = 1; i <= m; i++) {
+        int eu = find(edge[i].u), ev = find(edge[i].v);
+        if (eu == ev) continue;
         fa[ev] = eu;
-        wirte(edge[i].u,edge[i].v,edge[i].weight);
-        wirte(edge[i].v,edge[i].u,edge[i].weight);
-        //cout << edge[i].u << ' ' << edge[i].v << ' ' << endl;
-        edge[i].u = -1;
-        if(++times == n-1)break;
+        mst_weight += edge[i].weight;
+        edge[i].in_mst = true;
+        g[edge[i].u].push_back({edge[i].v, edge[i].weight});
+        g[edge[i].v].push_back({edge[i].u, edge[i].weight});
+        if (++edges_count == n - 1) break;
     }
 }
 
+int depth[N], f[N][20];
+ll max_w[N][20], sec_w[N][20];
 
-int indexxx = 1;
-void write(int x,int y,ll z)
-{
-    edge[indexxx].u = x;
-    edge[indexxx].v = y;
-    edge[indexxx++].weight = z;
-}
-
-int depth[N],f[N][32],check[N];
-void dfs(int now,int fa){
-    for(int i = 1; i <= 30; i++){
-            f[now][i] = f[f[now][i-1]][i-1];
-            w[now][i] = max(w[now][i-1],w[f[now][i-1]][i-1]);
-            ww[now][i] = max(ww[now][i-1],ww[f[now][i-1]][i-1]);
-            if(w[now][i-1] > w[f[now][i-1]][i-1])ww[now][i] = max(ww[now][i],w[f[now][i-1]][i-1]);
-            else if(w[now][i-1] < w[f[now][i-1]][i-1])ww[now][i] = max(ww[now][i],w[now][i-1]);
-    }
-    //cout << now << endl;
-    for(int i = head[now]; i; i = edges[i].next){
-        int next = edges[i].to;
-        if(next!=fa)
-        {
-            depth[next] = depth[now] + 1;
-            f[next][0] = now;
-            w[next][0] = edges[i].weight;
-            dfs(next,now);
+// 合併兩個區間的最大值與嚴格次大值
+void merge_info(ll mx1, ll se1, ll mx2, ll se2, ll &out_mx, ll &out_se) {
+    ll vals[4] = {mx1, se1, mx2, se2};
+    out_mx = -1;
+    out_se = -1;
+    for (int i = 0; i < 4; i++) {
+        if (vals[i] > out_mx) {
+            out_se = out_mx;
+            out_mx = vals[i];
+        } else if (vals[i] < out_mx && vals[i] > out_se) {
+            out_se = vals[i];
         }
     }
 }
 
-int lca(int x,int y)
-{
-    int ans = 0;
-    if(depth[x] < depth[y]) swap(x, y);//x>y
-    for(int i = 30; i >= 0; i--)
-        if(depth[f[x][i]] >= depth[y])
-        {
-            x = f[x][i];
+void dfs(int now, int p, int d, ll w) {
+    depth[now] = d;
+    f[now][0] = p;
+    max_w[now][0] = w;
+    sec_w[now][0] = -1;
+
+    for (int i = 1; i <= 18; i++) {
+        f[now][i] = f[f[now][i - 1]][i - 1];
+        merge_info(max_w[now][i - 1], sec_w[now][i - 1],
+                   max_w[f[now][i - 1]][i - 1], sec_w[f[now][i - 1]][i - 1],
+                   max_w[now][i], sec_w[now][i]);
+    }
+
+    for (auto &e : g[now]) {
+        if (e.to != p) {
+            dfs(e.to, now, d + 1, e.weight);
         }
-    if(x == y) return x;
-    for(int i = 30; i >= 0; i--)
-        if(f[x][i]!= f[y][i])
-        {
-            x = f[x][i], y = f[y][i];
+    }
+}
+
+// 查詢 u 到 v 路徑上，嚴格小於 limit 的最大邊權
+ll query_max(int u, int v, ll limit) {
+    ll cur_max = -1, cur_sec = -1;
+
+    auto update = [&](ll mx, ll se) {
+        merge_info(cur_max, cur_sec, mx, se, cur_max, cur_sec);
+    };
+
+    if (depth[u] < depth[v]) swap(u, v);
+    for (int i = 18; i >= 0; i--) {
+        if (depth[u] - (1 << i) >= depth[v]) {
+            update(max_w[u][i], sec_w[u][i]);
+            u = f[u][i];
         }
-    return f[x][0];
-}
+    }
 
-ll path(int x,int y,ll m)
-{
-    ll ans = 0;
-    for(int i = 30; i >= 0; i--)
-        if(depth[f[x][i]] >= depth[y])
-        {
-            if(m != w[x][i])ans = max(w[x][i],ans);
-            else ans = max(ww[x][i],ans);
-            //cout << w[x][i] << " " << ww[x][i] << endl;
-            x = f[x][i];
+    if (u != v) {
+        for (int i = 18; i >= 0; i--) {
+            if (f[u][i] != f[v][i]) {
+                update(max_w[u][i], sec_w[u][i]);
+                update(max_w[v][i], sec_w[v][i]);
+                u = f[u][i];
+                v = f[v][i];
+            }
         }
-    return ans;
+        update(max_w[u][0], sec_w[u][0]);
+        update(max_w[v][0], sec_w[v][0]);
+    }
+
+    if (cur_max != -1 && cur_max < limit) return cur_max;
+    if (cur_sec != -1 && cur_sec < limit) return cur_sec;
+    return -1;
 }
 
-int main(){
-scanf("%d%d",&n,&m);
-for(int i = 1;i<=n;i++)
-{
-    fa[i] = i;  
-}
-for(int i = 1;i<=m;i++)
-{
-    int x,y,z;
-    scanf("%d%d%d",&x,&y,&z);
-    write(x,y,z);
-    //cout << x << " " << y << endl;
-}
-kruskal();
-depth[1] = 1;
-f[1][0] = 1;
-w[1][0] = 0;
-ww[1][0] = INT64_MIN;
-dfs(1,0);
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
 
-ll ans = INT64_MAX;
-for(int i = 1;i<=m;i++)
-{
-    if(edge[i].u == -1)continue;
-    int LCA = lca(edge[i].u,edge[i].v);
-    int maxu = path(edge[i].u,LCA,edge[i].weight);
-    int maxv = path(edge[i].v,LCA,edge[i].weight);
-    //cout << edge[i].u << " " << edge[i].v << " " <<LCA << ' ' << maxu << ' ' << maxv <<' '<< edge[i].weight << endl;
-    ans = min(ans,ass - max(maxu,maxv) + edge[i].weight);
-}
-cout << ans;
-return 0;
-}       
+    if (!(cin >> n >> m)) return 0;
 
+    for (int i = 1; i <= m; i++) {
+        cin >> edge[i].u >> edge[i].v >> edge[i].weight;
+        edge[i].in_mst = false;
+    }
+
+    kruskal();
+    dfs(1, 0, 1, 0);
+
+    ll ans = INF;
+    for (int i = 1; i <= m; i++) {
+        if (edge[i].in_mst || edge[i].u == edge[i].v) continue;
+
+        ll best_edge = query_max(edge[i].u, edge[i].v, edge[i].weight);
+        if (best_edge != -1) {
+            ans = min(ans, mst_weight - best_edge + edge[i].weight);
+        }
+    }
+
+    cout << ans << "\n";
+    return 0;
+}
