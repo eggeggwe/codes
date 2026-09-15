@@ -1,33 +1,31 @@
-#include <iostream>
-#include <vector>
-#include <algorithm>
-
+#include <bits/stdc++.h>
 using namespace std;
 
-// 根據競賽需求調整最大矩形數量 (N)
-// 矩形數為 N，則事件數為 2N，Y 座標數為 2N
-const int MAXN = 200005; 
+// ==========================================================
+// 矩形面積聯集 (Rectangle Area Union - 掃描線 + 線段樹)
+// 時間複雜度：O(N log N)
+// ==========================================================
+
+const int MAXN = 200005;
 
 struct Event {
     double x;
     double y1, y2;
-    int type;
-    bool operator<(const Event& other) const {
+    int type; // +1: 入邊, -1: 出邊
+
+    bool operator<(const Event &other) const {
         if (x != other.x) return x < other.x;
-        return type > other.type; // 習慣上先處理入邊 (+1)
+        return type > other.type; // 相同 X 時先處理加邊
     }
 } events[MAXN * 2];
 
-// Y 座標離散化陣列
 double ys[MAXN * 2];
 
-// 線段樹節點陣列（4倍空間）
 struct Node {
     int cnt;
     double len;
 } tree[MAXN * 8];
 
-// 更新節點覆蓋長度
 inline void push_up(int node, int l, int r) {
     if (tree[node].cnt > 0) {
         tree[node].len = ys[r + 1] - ys[l];
@@ -38,7 +36,6 @@ inline void push_up(int node, int l, int r) {
     }
 }
 
-// 區間修改：ql, qr 為離散化後的 Y 區間索引
 void update(int node, int l, int r, int ql, int qr, int val) {
     if (ql <= l && r <= qr) {
         tree[node].cnt += val;
@@ -53,29 +50,37 @@ void update(int node, int l, int r, int ql, int qr, int val) {
 
 void solve() {
     int n;
-    cin >> n;
+    if (!(cin >> n) || n <= 0) return;
 
     int ev_cnt = 0, y_cnt = 0;
     for (int i = 0; i < n; ++i) {
         double x1, y1, x2, y2;
         cin >> x1 >> y1 >> x2 >> y2;
         
+        // 確保座標順序正確 (左下、右上)
+        if (x1 > x2) swap(x1, x2);
+        if (y1 > y2) swap(y1, y2);
+
         events[ev_cnt++] = {x1, y1, y2, 1};
         events[ev_cnt++] = {x2, y1, y2, -1};
         ys[y_cnt++] = y1;
         ys[y_cnt++] = y2;
     }
 
-    // 1. Y 座標離散化 (排序 + 去重)
+    // 1. Y 座標離散化
     sort(ys, ys + y_cnt);
     y_cnt = unique(ys, ys + y_cnt) - ys;
 
-    // 2. 掃描線事件排序
+    if (y_cnt <= 1) {
+        cout << fixed << setprecision(2) << 0.0 << "\n";
+        return;
+    }
+
+    // 2. 掃描線事件依 X 排序
     sort(events, events + ev_cnt);
 
-    // 3. 初始化線段樹（多筆測資重置）
-    // 區間總數為 y_cnt - 1，線段樹維護索引 0 到 y_cnt - 2
-    int max_node = y_cnt * 4;
+    // 3. 初始化線段樹 (多筆測資重置)
+    int max_node = (y_cnt + 2) * 4;
     for (int i = 0; i <= max_node; ++i) {
         tree[i].cnt = 0;
         tree[i].len = 0.0;
@@ -83,13 +88,12 @@ void solve() {
 
     double total_area = 0.0;
 
-    // 4. 執行掃描線
+    // 4. 掃描線遍歷
     for (int i = 0; i < ev_cnt; ++i) {
         if (i > 0) {
             total_area += (events[i].x - events[i - 1].x) * tree[1].len;
         }
 
-        // 二分搜尋找到離散化後的索引位置
         int ql = lower_bound(ys, ys + y_cnt, events[i].y1) - ys;
         int qr = lower_bound(ys, ys + y_cnt, events[i].y2) - ys - 1;
 
@@ -98,15 +102,14 @@ void solve() {
         }
     }
 
-    printf("%.2f\n", total_area);
+    cout << fixed << setprecision(2) << total_area << "\n";
 }
 
 int main() {
-    // 競賽 I/O 優化
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
-    
+
     solve();
-    
+
     return 0;
 }

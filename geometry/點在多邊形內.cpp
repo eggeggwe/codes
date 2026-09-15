@@ -1,113 +1,89 @@
 #include <bits/stdc++.h>
 using namespace std;
-const double EPS=1e-7;
-struct point{
-    long long int x,y;
-    
-    point operator * (int a){return{x*a,y*a};};
-    point operator / (int a){return{x/a,y/a};};
-    point operator + (point a){return{x+a.x,y+a.y};};
-    point operator - (point a){return{x-a.x,y-a.y};};
- 
-    long long int operator * (point a){return x*a.x + y * a.y;}
-    long long int operator ^ (point a){return x*a.y - y * a.x;}
- 
-    void print(){
-        cerr<<x<<" "<<y<<"\n";
-    }
+
+// ==========================================================
+// 點在多邊形內判定 (Point in Polygon - 射線法 O(N))
+// 適用於任意簡單多邊形 (不自交即可，凸凹皆可)
+// ==========================================================
+
+const double EPS = 1e-9;
+
+inline int sgn(double x) {
+    if (fabs(x) < EPS) return 0;
+    return x > 0 ? 1 : -1;
+}
+
+struct Point {
+    double x, y;
+    Point(double x = 0, double y = 0) : x(x), y(y) {}
+
+    Point operator+(const Point &b) const { return {x + b.x, y + b.y}; }
+    Point operator-(const Point &b) const { return {x - b.x, y - b.y}; }
+    double operator*(const Point &b) const { return x * b.x + y * b.y; } // 內積
+    double operator^(const Point &b) const { return x * b.y - y * b.x; } // 外積
 };
-double abs(point a){
-    return sqrt(a.x*a.x + a.y*a.y);
+
+// 檢查點 p 是否在線段 ab 上 (含端點)
+bool on_segment(Point p, Point a, Point b) {
+    return sgn((a - p) ^ (b - p)) == 0 && sgn((a - p) * (b - p)) <= 0;
 }
-//test for sign
-int sign(long long int a){
-    if(abs(a)<EPS)return 0;
-    if(a>0)return 1;
-    return -1;
-}
-//ab to ac
-int ori(point a,point b,point c){
-    return sign((b-a)^(c-a));
-}
-//test ab and ac are colinear
-bool colinear(point a,point b,point c){
-    if(sign(ori(a,b,c))==0)return 1;
-    return 0;
-}
-//test if c between a and b
-bool between(point a,point b,point c){
-    if(!colinear(a,b,c))return 0;
-    return sign((a-c)*(b-c))<=0;
-}
-bool intersection(point a,point b,point c,point d){
-    //a.print();
-    //b.print();
-    //c.print();
-    //d.print();
-    int abc=ori(a,b,c);
-    int abd=ori(a,b,d);
-    int cda=ori(c,d,a);
-    int cdb=ori(c,d,b);
-    if(abc==0 && abd==0){
-        return between(a,b,c) || between(a,b,d) || between(c,d,a) || between(c,d,b);
-    }
-    return abc*abd<=0 && cda*cdb<=0;
-}
-int n,m;
-point poly[1010];
-bool test(point b,point a){
-    for(int i=0;i<n;i++){
-        if(between(a,b,poly[i])){
-            return 1;
+
+/**
+ * @brief 判定點 p 與多邊形 poly 的位置關係 (O(N) 射線法)
+ * @return 0: 邊界上 (BOUNDARY), 1: 內部 (INSIDE), -1: 外部 (OUTSIDE)
+ */
+int point_in_polygon(Point p, const vector<Point> &poly) {
+    int n = poly.size();
+    bool inside = false;
+
+    for (int i = 0; i < n; i++) {
+        Point a = poly[i];
+        Point b = poly[(i + 1) % n];
+
+        // 1. 先判斷是否恰好在多邊形邊界上 (包含頂點)
+        if (on_segment(p, a, b)) {
+            return 0; // BOUNDARY
+        }
+
+        // 2. 射線法：向 +X 方向發射射線
+        // 為避免頂點重合問題，規範邊為下閉上開區間 [min_y, max_y)
+        if (a.y > b.y) swap(a, b);
+
+        if (a.y <= p.y && p.y < b.y) {
+            // 計算向右射線是否穿過線段 ab
+            // 即檢查 p 是否位於有向線段 a -> b 的左側 (外積 > 0)
+            if (((b - a) ^ (p - a)) > 0) {
+                inside = !inside;
+            }
         }
     }
-    return 0;
+
+    return inside ? 1 : -1;
 }
- 
-void solve(point a){
-    for(int i=0;i<n;i++){
-        if(sign(abs(poly[i]-a))==0){
-            cout<<"BOUNDARY\n";
-            return;
-        }
-    }
-    for(int i=0;i<n;i++){
-        if(between(poly[i],poly[(i+1)%n],a)){
-            cout<<"BOUNDARY\n";
-            return;
-        }
-    }
-    //a.print();
-    //cerr<<"\n";
-    point b=a+point{1,(long long int)2e9+(long long int)(5)};
-    while(test(b,a)){
-        b.y++;
-    }
-    int cnt=0;
-    for(int i=0;i<n;i++){
-        if(intersection(poly[i],poly[(i+1)%n],a,b)){
-            cnt++;
-        }
-    }
-    //cerr<<cnt<<"\n\n";
-    if(cnt%2==0){
-        cout<<"OUTSIDE\n";
-    }else{
-        cout<<"INSIDE\n";
-    }
-    return;
-}
+
 int main() {
-    // ios::sync_with_stdio(0),cin.tie(0),cout.tie(0);
-    //cerr<<intersection(point{1,1},point{5,5},point{1,5},point{5,1})<<"\n";
-    cin>>n>>m;
-    for(int i=0;i<n;i++){
-        cin>>poly[i].x>>poly[i].y;
-    }
-    while(m--){
-        point tmp;
-        cin>>tmp.x>>tmp.y;
-        solve(tmp);
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    int n, m;
+    if (cin >> n >> m) {
+        vector<Point> poly(n);
+        for (int i = 0; i < n; i++) {
+            cin >> poly[i].x >> poly[i].y;
+        }
+
+        while (m--) {
+            Point q;
+            cin >> q.x >> q.y;
+            int res = point_in_polygon(q, poly);
+            if (res == 0) {
+                cout << "BOUNDARY\n";
+            } else if (res == 1) {
+                cout << "INSIDE\n";
+            } else {
+                cout << "OUTSIDE\n";
+            }
+        }
     }
     return 0;
 }
