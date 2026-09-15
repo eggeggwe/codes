@@ -1,3 +1,5 @@
+// 演算法用途：將無向圖的點雙連通分量縮為「方點」，與原圖「圓點」相連成樹，用樹上演算法（樹剖/倍增）解簡單路徑交集、割點與瓶頸權值。
+// 輸入輸出規範：輸入為無向圖之 n, m 與 m 條邊；輸出為圓方樹的所有連邊，格式為「圓點編號 方點編號」（方點編號由 n+1 起算）。
 #include<iostream>
 #include<algorithm>
 #include<stdio.h>
@@ -47,7 +49,7 @@ void tarjan(int now){
                 while(nq != v)
                 {
                     nq = q.top();
-                    cout << nq << ' ' << np << endl;
+                    //cout << nq << ' ' << np << endl;
                     q.pop();
                     nwirte(np,nq);
                     nwirte(nq,np);
@@ -56,7 +58,7 @@ void tarjan(int now){
                 }
                 nwirte(now,np);
                 nwirte(np,now);
-                cout << now << ' ' << np << endl;
+                //cout << now << ' ' << np << endl;
                 w[np]++;
                 //cout << now <<' '<< size[now] << endl;
             }
