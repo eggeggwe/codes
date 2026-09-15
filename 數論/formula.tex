@@ -1,33 +1,62 @@
-機率小公式
-$\binom{m}{n}=\binom{m-1}{n-1}+\binom{m-1}{n}$
+\section*{常用數論與組合數學公式筆記}
 
-分數計算
-可能要用資結，砸奇怪的東西
-python有個東西叫做eval，但是他會算出小數
-python有個東西教作fractions，可以幫你存分數
+\subsection*{1. 組合數遞推 (巴斯卡恆等式)}
+$$\binom{n}{k} = \binom{n-1}{k-1} + \binom{n-1}{k}$$
+邊界條件：$\binom{n}{0} = \binom{n}{n} = 1$。
 
-中國剩餘定理
-他會跟你講某數字好幾組模幾餘幾，問你那數字是啥
-假設是
-模3餘2，模5餘1，模7餘4
-所以答案就是35(7* 5) +21 (7 * 3 ) +30 (6 * 5) + gcd(3,5,7) * z(任一數字)
-如果你發現結果大於gcd(3,5,7)的話 mod gcd(3,5,7)
+\subsection*{2. 卡塔蘭數 (Catalan Numbers)}
+前幾項：$1, 1, 2, 5, 14, 42, 132, 429, 1430, 4862, \dots$
+\begin{itemize}
+    \item 通項公式：$C_n = \frac{1}{n+1}\binom{2n}{n} = \binom{2n}{n} - \binom{2n}{n-1}$
+    \item 遞推公式：$C_n = \frac{4n-2}{n+1} C_{n-1}$，或 $C_n = \sum_{i=0}^{n-1} C_i C_{n-1-i}$
+\end{itemize}
 
-貝祖定理 就是看有沒有整數解m
-當你要解出ax+by=m
-你要用x和y解出這個m的時候
-貝祖定理說
-ax+by=m
-m有解 when m整除gcd(a,b)
+\subsection*{3. 貝祖定理 (Bézout's Identity)}
+對於整數方程式 $ax + by = m$：
+\begin{itemize}
+    \item \textbf{有整數解的充要條件}：$\gcd(a, b) \mid m$（即 $m$ 是 $\gcd(a, b)$ 的倍數，注意不是 $m$ 整除 $\gcd$）。
+    \item 可利用擴展歐幾里得演算法 (exgcd) 求出一組特解 $(x_0, y_0)$。
+    \item 通解形式：$x = x_0 + k \cdot \frac{b}{\gcd(a,b)}$，$y = y_0 - k \cdot \frac{a}{\gcd(a,b)} \quad (k \in \mathbb{Z})$。
+\end{itemize}
 
-擴展 歐拉定理
-$a^b \equiv$
-$
+\subsection*{4. 中國剩餘定理 (CRT)}
+求解線性同餘方程組：$x \equiv a_i \pmod{m_i}$，其中 $m_1, m_2, \dots, m_k$ \textbf{兩兩互質}。
+\begin{enumerate}
+    \item 設總模數 $M = \prod_{i=1}^k m_i$。
+    \item 對於每個方程式，設 $M_i = \frac{M}{m_i}$。
+    \item 求出 $M_i$ 模 $m_i$ 的乘法逆元 $t_i$（即 $M_i \cdot t_i \equiv 1 \pmod{m_i}$）。
+    \item 唯一解（模 $M$ 下）：
+    $$x = \sum_{i=1}^k a_i \cdot M_i \cdot t_i \pmod M$$
+    \textbf{範例}：$x \equiv 2 \pmod 3,\ x \equiv 1 \pmod 5,\ x \equiv 4 \pmod 7$
+    \begin{itemize}
+        \item $M = 3 \times 5 \times 7 = 105$
+        \item $M_1 = 35$, $35 \equiv 2 \pmod 3 \implies t_1 \equiv 2 \implies 2 \times 35 \times 2 = 140$
+        \item $M_2 = 21$, $21 \equiv 1 \pmod 5 \implies t_2 \equiv 1 \implies 1 \times 21 \times 1 = 21$
+        \item $M_3 = 15$, $15 \equiv 1 \pmod 7 \implies t_3 \equiv 1 \implies 4 \times 15 \times 1 = 60$
+        \item $x \equiv 140 + 21 + 60 = 221 \equiv 11 \pmod{105}$。
+    \end{itemize}
+    \textbf{注意}：最後取模的對象是總乘積 $M = \text{lcm}(m_i) = 105$，絕不能 mod $\gcd$！
+\end{enumerate}
+
+\subsection*{5. 擴展歐拉定理 (Extended Euler's Theorem)}
+對於任意正整數 $a, m$ 與非負整數 $b$（不要求 $a, m$ 互質）：
+$$
+a^b \equiv
 \begin{cases}
-a^{b \ mod \ \varphi(m)}\ gcd(a,m)=1, \\
-a^b,\ gcd(a,m) \ne 1, b < \varphi(m),\ (mod\  m)  \\
-a^{(b \ mod \ \varphi(m))+\varphi(m)} gcd(a,m) \ne 1, b \ge \varphi(m)
+a^b \pmod m & b < \varphi(m) \\
+a^{(b \bmod \varphi(m)) + \varphi(m)} \pmod m & b \ge \varphi(m)
 \end{cases}
-$
-可以知道 a^b mod m
+$$
 
+\subsection*{6. 莫比烏斯反演 (Möbius Inversion)}
+定義積性函數 $\mu(n)$：
+$$
+\mu(n) =
+\begin{cases}
+1 & n = 1 \\
+(-1)^k & n \text{ 為 } k \text{ 個互異質因數的乘積} \\
+0 & n \text{ 包含平方質因數因子}
+\end{cases}
+$$
+性質：$\sum_{d \mid n} \mu(d) = [n = 1]$。
+反演公式：若 $f(n) = \sum_{d \mid n} g(d)$，則 $g(n) = \sum_{d \mid n} \mu(d) f(\frac{n}{d})$。
