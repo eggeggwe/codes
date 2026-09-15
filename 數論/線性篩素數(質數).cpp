@@ -1,26 +1,42 @@
-#include<bits/stdc++.h>
+#include <bits/stdc++.h>
 using namespace std;
 
-bool a[100000010]={0};
-vector<int >b;//質數陣列
-int main(){
-    ios::sync_with_stdio(0);
-    cin.tie(0);
-    long long int q,n;
-    cin>>q>>n;//q是範圍
-    for(int i=2; i<=q; i++){
-	  if(a[i]==false)
-		b.push_back(i);
-	  for(int j=0; j<b.size()&&i*b[j]<=q; j++){
-		a[i*b[j]] = true ;
-	      if(i%b[j]==0)
-		      break;
-	    } 
-	}
-    
-    for(auto e:b){
-        cout<<e<<endl;
+// 線性篩法（歐拉篩法）求質數
+// 時間複雜度：O(n)
+const int MAXN = 10000005; // 依題目記憶體上限與範圍調整 (1e7 約耗 10MB ~ 40MB)
+bitset<MAXN> is_prime;
+vector<int> primes;
+int minp[MAXN]; // minp[i] 儲存 i 的最小質因數 (Smallest Prime Factor, SPF)
+
+void sieve(int n) {
+    is_prime.set();
+    is_prime[0] = is_prime[1] = 0;
+
+    for (int i = 2; i <= n; ++i) {
+        if (is_prime[i]) {
+            primes.push_back(i);
+            minp[i] = i;
+        }
+        for (int p : primes) {
+            if (1LL * i * p > n) break;
+            is_prime[i * p] = 0;
+            minp[i * p] = p;
+            if (i % p == 0) break; // 保證每個合數只被最小質因數篩去一次
+        }
+    }
+}
+
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    int q;
+    if (cin >> q) {
+        sieve(q);
+        // 注意：千萬不可使用 endl，否則輸出量大時會嚴重 TLE
+        for (int p : primes) {
+            cout << p << "\n";
+        }
     }
     return 0;
 }
-
