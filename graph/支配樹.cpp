@@ -3,6 +3,11 @@
 n,m，表示点数和边数  u,v，表示一条 u 到 v 的有向边
 輸出每个点能支配的点的个数
 */
+// 使用方法:
+//   DT.init(n)                初始化
+//   DT.add(u, v)               加一條 u->v 有向邊
+//   DT.build(1)                以節點1為根建支配樹 (Lengauer-Tarjan)
+//   DT.sz[i]                    節點 i 在支配樹上的子樹大小 = i 能支配的點數 (含自己)
 #include <iostream>
 #include <algorithm>
 #include <vector>

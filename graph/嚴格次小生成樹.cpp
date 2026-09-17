@@ -1,3 +1,9 @@
+// 嚴格次小生成樹 (Strictly Second Best MST)
+// 用途: n個點、m條邊的無向圖，求「權重和嚴格大於最小生成樹」的生成樹中，權重和最小的那個
+// 複雜度: O(m log m + n log n)
+// 使用方法: 直接輸入 n,m 後接 m 條邊 (u v w)，main() 會自動跑 Kruskal 建 MST、倍增求路徑最大/次大邊
+// 原理: 對每條非樹邊 (u,v,w)，嘗試替換路徑 u-v 上小於 w 的最大邊 (若最大邊等於w則改用次大邊，確保嚴格更大)
+
 #include <iostream>
 #include <algorithm>
 #include <vector>

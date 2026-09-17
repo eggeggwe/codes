@@ -7,6 +7,11 @@
 // 3 x z，表示将以  x  为根节点的子树内所有节点值都加上  z。
 
 // 4 x，表示求以  x  为根节点的子树内所有节点值之和。
+// 使用方法:
+//   dfs1(root,0,1); dfs2(root,root); build(1,1,n)   初始化 (root 為樹根)
+//   addRange(x,y,z) / sumRange(x,y)                  路徑 x→y 加值 / 求和
+//   addSon(x,z)     / sumSon(x)                       子樹加值 / 求和
+// 注意: 點從1開始，w[] 為原始點權，內部轉成 dfs 序存到 wt[]
 #include<iostream>
 #include<algorithm>
 #include<stdio.h>

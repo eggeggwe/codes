@@ -1,3 +1,9 @@
+// Tarjan 找割點 (Articulation Points)
+// 用途: 無向圖中，求哪些點被移除後會使圖不連通 (或分量增加)
+// 複雜度: O(n+m)
+// 使用方法: 輸入 n, m 後接 m 條邊 (x y)，對每個未走訪點跑 tarjan(i, true)
+// 輸出: 第一行為割點個數，第二行為所有割點編號
+
 #include<iostream>
 #include<algorithm>
 #include<stdio.h>

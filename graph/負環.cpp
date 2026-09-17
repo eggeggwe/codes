@@ -1,3 +1,8 @@
+// SPFA 判斷負環
+// 用途: t 筆測資，每筆給 n個點、m條邊 (邊權可負)，判斷圖中是否存在負環
+// 複雜度: O(n*m) 最壞情況
+// 使用方法: 輸入 t，每筆測資輸入 n,m 後接 m 條邊 (a b c)；c>=0 視為無向邊，c<0 視為單向邊
+// 輸出: 每筆測資輸出 YES(有負環) 或 NO(無負環)
 #include<iostream>
 #include<algorithm>
 #include<stdio.h>

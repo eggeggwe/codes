@@ -6,6 +6,12 @@ k 能够满足 𝑎𝑥 +𝑏𝑦 +𝑐𝑧 =𝑘。（0 ≤𝑎,𝑏,𝑐，1 �
  * 
  * 
  * */
+// 使用方法:
+//   對每個餘數 i∈[0,x) 建邊 i -> (i+y)%x 權重y, i -> (i+z)%x 權重z
+//   以節點0為源點跑最短路 (SPFA/dijkstra皆可，此檔用SPFA)
+//   lenght[i] = 用 y,z 湊出「模 x 餘 i」的最小總和
+//   對每個餘數 i，若 h>=lenght[i]，能湊出的數量為 (h-lenght[i])/x + 1，加總即為答案
+// 注意: 圖為 0-indexed 節點 (0..x-1)，跟一般模板的 1-indexed 不同，抄用時要注意
 #include<iostream>
 #include<algorithm>
 #include<stdio.h>

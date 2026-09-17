@@ -1,3 +1,11 @@
+// KM 演算法 (Kuhn-Munkres): 二分圖最大權完美匹配 (左右點數需相等)
+// 用途: n個左點、n個右點，每對 (x,y) 有權重 g[x][y]，求一組完美匹配使總權重最大
+// 複雜度: O(n^3)
+// 使用方法:
+//   graph.init(n)                初始化 (1-indexed)
+//   graph.addEdge(x, y, w)       設定 x->y 的邊權 (未設定預設為0)
+//   graph.solve()                回傳完美匹配下的最大總權重
+// 注意: 求最小權完美匹配時，將權重取負再呼叫 solve()，結果再取負回來
 	struct KM{ // max weight, for min negate the weights
   int n, mx[MXN], my[MXN], pa[MXN];
   ll g[MXN][MXN], lx[MXN], ly[MXN], sy[MXN];

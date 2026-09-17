@@ -5,6 +5,13 @@
 // With a plan of this type you can open a portal from any planet with index in range  [l, r]  to planet  v.
 // 求最短路
 // 將區間化成節點，開兩個線段樹，一進一出，最後直接DFS
+// 使用方法:
+//   build(1,1,n)                          先建兩棵線段樹 (in-tree/out-tree)
+//   wirte(leaves[u], leaves[v], w)         type1: u -> v 權重 w
+//   connect(1,1,n,l,r,u,w,2)               type2: u -> [l,r]
+//   connect(1,1,n,l,r,u,w,3)               type3: [l,r] -> u
+//   dijkstra(leaves[s])                    求最短路，結果存於 lenght[leaves[i]]
+// 注意: dx 為兩棵樹節點的位移量，edges[] 大小要依 n,q 估算，數量大時要調大
 #include<iostream>
 #include<algorithm>
 #include<queue>

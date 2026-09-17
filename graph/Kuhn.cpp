@@ -1,3 +1,11 @@
+// 匈牙利演算法 (Kuhn): 二分圖最大匹配 (不需權重)
+// 用途: 左邊 n 個點、右邊 m 個點，求最大匹配數
+// 複雜度: O(V*E)
+// 使用方法:
+//   kuhn k; k.init(n, m)          初始化 (0-indexed)
+//   k.add_edge(u, v)              左點 u 連右點 v
+//   k.build()                     執行匹配，結果存於 k.ans
+// 注意: build() 內先做貪心配對再對未配對點跑增廣路，加速常數
 struct kuhn{
     vector<vll> graph;
     ll n,m;

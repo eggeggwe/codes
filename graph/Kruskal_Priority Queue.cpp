@@ -1,3 +1,8 @@
+// Kruskal 最小生成樹 (優先佇列版)
+// 用途: n個點、m條邊的無向圖，求最小生成樹總權重
+// 複雜度: O(m log m)
+// 使用方法: 直接輸入 n, m 後接 m 條邊 (u v w)，圖不連通時輸出 "orz"
+
 #include <iostream>
 #include <vector>
 #include <queue>

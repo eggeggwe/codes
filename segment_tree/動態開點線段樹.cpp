@@ -1,3 +1,11 @@
+// 線段樹: 動態開點，區間加值、區間求和
+// 用途: 值域很大 (如 1e9) 但操作次數不多時，省去預先建樹的空間
+// 複雜度: 每次操作新增節點數 O(log V)，V 為值域大小
+// 使用方法:
+//   DynSeg t; t.init();
+//   t.add(l, r, v);   // 區間 [l,r] 加 v
+//   t.sum(l, r);      // 查詢區間 [l,r] 和
+// 注意: 值域寫死在 add/sum 內的 1e9，需依題目改這兩行的值域上界
 struct DynSeg {
     struct Node { ll sum = 0; int lc = 0, rc = 0; };
     struct Tag { ll add = 0; bool has = 0; };

@@ -1,3 +1,9 @@
+// Tarjan 縮點 + 拓樸 DP 求最大點權路徑和
+// 用途: n個點(每點有權重)、m條有向邊，求一條路徑(可重複經過同一SCC內的點)使經過點權和最大 (對應 Luogu P3387)
+// 複雜度: O(n+m)
+// 使用方法: 輸入 n,m，接 n 個點權，再接 m 條有向邊 (x y)，main() 內會自動做 Tarjan 縮點+拓樸DP
+// 注意: 縮點後同一 SCC 內的點權重會全部加總算一次 (nw[代表點])
+
 #include <iostream>
 #include <cstdio>
 #include <stack>

@@ -1,3 +1,11 @@
+// Dinic 演算法: 最大流
+// 用途: 求 S 到 T 的最大流量
+// 複雜度: O(V^2 * E)，一般圖跑得比理論快很多
+// 使用方法:
+//   Dinic d; d.init(n, S, T)          初始化節點數與源點/匯點
+//   d.add_edge(u, v, flow)            加一條 u->v 容量 flow 的邊 (自動加反向邊容量0)
+//   d.dinic()                          回傳最大流量
+
 struct Dinic{
     struct edge{
         ll v,flow,rv_id;

@@ -2,6 +2,10 @@
 
 // 0 l r a b: Add a segment y=ax+b(where x∈[l,r))
 // 1 p: Find the minimal y at x=p. If such y doesn't exist, output INFINITY.
+// 使用方法:
+//   insert_segment(1,0,M-1,cl,cr,Line(a,b))   加入線段 (座標需先離散化存入 xs[])
+//   qry(1,0,M-1,cp)                            查詢 x=p 處最小值，回傳 INT64_MAX 表示不存在
+// 注意: 下標從0開始 (離散化後)，需先把所有 l、r-1、p 收集到 xs 再排序去重
 #include <iostream>
 #include <algorithm>
 #include <cstdio>

@@ -1,9 +1,12 @@
-// 最好要有
-
-// 區間加值
-// 區間乘值
-// 區間復值(乘0後再加值)
-// 區間和
+// 線段樹: 區間加值、區間乘值、區間求和 (mod m)
+// 用途: 同時支援區間加法/乘法/區間求和，全程取模 m
+// 複雜度: build O(n)，update/mul/qurey 均為 O(log n)
+// 使用方法:
+//   build(1,1,n)                 初始化，wt[1..n] 為初始值
+//   mul(1,1,n,l,r,k)             區間 [l,r] 全部乘上 k
+//   update(1,1,n,l,r,k)          區間 [l,r] 全部加上 k
+//   res=0; qurey(1,1,n,l,r)      查詢區間和，結果存於全域變數 res
+// 注意: 區間賦值 = 先乘0再加值；下標從1開始
 #include<iostream>
 #include<algorithm>
 #include<stdio.h>

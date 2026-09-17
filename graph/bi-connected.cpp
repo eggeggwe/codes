@@ -1,3 +1,10 @@
+// Tarjan 找點雙連通分量 (Biconnected Components)
+// 用途: 無向圖中，求所有點雙連通分量 (每個分量內任兩點都在同一個簡單環上或直接相連)
+// 複雜度: O(n+m)
+// 使用方法: 輸入 n,m 後接 m 條邊 (u v)，直接執行即可
+// 輸出: 第一行為分量數，之後每行為一個分量的大小與所包含的點
+// 注意: 孤立點單獨成一個分量；圓方樹可基於此結果建圖
+
 #include <iostream>
 #include <vector>
 #include <algorithm>

@@ -1,3 +1,12 @@
+// 線段樹: 區間開根號 (向下取整)、區間求和
+// 用途: 利用「開根號很快變成1」的特性做均攤複雜度優化 (amax<=1時跳過整段)
+// 複雜度: 總開根號次數攤還為 O(n log(max value))
+// 使用方法:
+//   build(1,1,n)              初始化 wt[1..n]
+//   update(1,1,n,l,r)          區間 [l,r] 全部開根號 (向下取整)
+//   res=0; qurey(1,1,n,l,r)    查詢區間和，結果存於 res
+// 注意: 數值大時 sqrt(double) 有精度風險，建議改 sqrtl 並做誤差修正
+
 #include<iostream>
 #include<algorithm>
 #include<stdio.h>

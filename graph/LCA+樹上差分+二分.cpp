@@ -1,4 +1,11 @@
 /*給定一個 $n$ 個點的帶權樹，和 $m$ 條路徑 $(u_i, v_i)$。你可以選擇樹上的一條邊，將其權重變為 0。你的目標是最小化 $m$ 條路徑中，最長那條路徑的長度。輸入:第一行: n m接下來 $n-1$ 行: a b t (邊 $(a, b)$ 權重為 $t$)接下來 $m$ 行: u v (一條路徑的起點和終點)輸出:一個整數，代表最小化的「最長路徑長度」。*/
+// 使用方法:
+//   Tree::wirte(x,y,z)                建邊 (自動雙向)
+//   Tree::build_tables(root,n)        建立 LCA 倍增表 (需在讀完所有邊後呼叫一次)
+//   Tree::path(x,y)                    查詢 x 到 y 的路徑權重和
+//   Tree::lca(x,y)                     查詢 x,y 的最近公共祖先
+//   Tree::run_tree_diff(root)          執行樹上差分 (需先對 Tree::dif[] 打標記)
+// 本檔案 main() 額外實作「二分答案 + 樹上差分」求最小化最長路徑 (運輸計劃問題)
 #include <iostream>
 #include <algorithm>
 #include <stdio.h>

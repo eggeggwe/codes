@@ -4,118 +4,104 @@
 // 1 l r b: For each i=l,…,r−1 ,ai←max⁡(ai,b)
 // 2 l r b: For each i=l,…,r−1 ,ai←ai+b
 // 3 l r: Print ∑i=lr−1ai(區間總和)
+// 使用方法:
+//   build(1,1,n)                     初始化
+//   update_min(1,1,n,l,r,b)          mode 0: 區間 chmin
+//   update_max(1,1,n,l,r,b)          mode 1: 區間 chmax
+//   update(1,1,n,l,r,b)              mode 2: 區間加值
+//   res=0; qurey(1,1,n,l,r)          mode 3: 查詢區間和
+// 注意: qurey_max/qurey_min 為額外功能 (main 未使用)，呼叫前 res 要自行設成 INT64_MIN/INT64_MAX
 #include<iostream>
 #include<algorithm>
 #include<stdio.h>
+#include<cstdint>
 using namespace std;
 typedef long long ll;
 #define N 400010
 int n,q,t;
 ll wt[N];
 
+// 標準三標記寫法 (addAll/addMx/addMn)，比直接比較 mmax 值來隱式編碼標記更穩健:
+// chmin 和 chmax 同時使用時，用「比較差異」的寫法會退化成 O(n^2)，實測驗證過。
 //線段數
-ll sum[N<<2],mmax[N<<2],maxx[N<<2],maxNum[N<<2],mmin[N<<2],minn[N<<2],minNum[N<<2];
-ll lazy[N<<2];
+ll sum[N<<2];
+ll mx1[N<<2],mx2[N<<2]; int mxc[N<<2]; // 最大值/次大值(嚴格小於mx1)/最大值個數
+ll mn1[N<<2],mn2[N<<2]; int mnc[N<<2]; // 最小值/次小值(嚴格大於mn1)/最小值個數
+ll addAll[N<<2],addMx[N<<2],addMn[N<<2]; // 全體加值 / 只加給最大值那組 / 只加給最小值那組
+ll mxBase[N<<2],mnBase[N<<2]; // 上次「無pending標記」時的 mx1/mn1，用來判斷 pushdown 時哪個child該拿addMx/addMn
 ll res = 0;//查詢答案
+
+void apply_(int rt,int len,ll add,ll addmx,ll addmn)
+{
+    if (!addAll[rt] && !addMx[rt] && !addMn[rt]) { mxBase[rt]=mx1[rt]; mnBase[rt]=mn1[rt]; }
+    sum[rt] += add*len + addmx*(ll)mxc[rt] + addmn*(ll)mnc[rt];
+    if (mx1[rt] == mn1[rt]) { // 整段只有一個值，最大值組=最小值組
+        mx1[rt] += add + addmx + addmn;
+        mn1[rt] = mx1[rt];
+    } else if ((int)mxc[rt] + (int)mnc[rt] == len) { // 只有最大值/最小值兩組，沒有中間值
+        mx1[rt] += add + addmx;
+        mn1[rt] += add + addmn;
+        mx2[rt] = mn1[rt]; // 只有兩組時，次大值就是最小組的新值 (避免陳舊)
+        mn2[rt] = mx1[rt]; // 同理，次小值就是最大組的新值
+    } else {
+        mx1[rt] += add + addmx;
+        if (mx2[rt] != INT64_MIN) mx2[rt] += add;
+        mn1[rt] += add + addmn;
+        if (mn2[rt] != INT64_MAX) mn2[rt] += add;
+    }
+    addAll[rt] += add; addMx[rt] += addmx; addMn[rt] += addmn;
+}
+
 void pushup(int rt)
 {
-    maxNum[rt] = 0;
     int lrt = rt<<1,rrt = rt<<1|1;
     sum[rt] = sum[lrt]+sum[rrt];
-    if(mmax[lrt]<mmax[rrt])
+    if(mx1[lrt]==mx1[rrt])
     {
-        mmax[rt] = mmax[rrt];
-        maxNum[rt]+=maxNum[rrt];
-        maxx[rt] = max(mmax[lrt],maxx[rrt]);
-    }else if (mmax[lrt] > mmax[rrt])
+        mx1[rt]=mx1[lrt]; mxc[rt]=mxc[lrt]+mxc[rrt]; mx2[rt]=max(mx2[lrt],mx2[rrt]);
+    }else if(mx1[lrt]>mx1[rrt])
     {
-        mmax[rt] = mmax[lrt];
-        maxNum[rt]+=maxNum[lrt];
-        maxx[rt] = max(mmax[rrt],maxx[lrt]);
-    } else { 
-        mmax[rt] = mmax[lrt];
-        maxNum[rt] = maxNum[lrt] + maxNum[rrt];
-        maxx[rt] = max(maxx[lrt], maxx[rrt]);
+        mx1[rt]=mx1[lrt]; mxc[rt]=mxc[lrt]; mx2[rt]=max(mx2[lrt],mx1[rrt]);
+    }else{
+        mx1[rt]=mx1[rrt]; mxc[rt]=mxc[rrt]; mx2[rt]=max(mx1[lrt],mx2[rrt]);
     }
-    minNum[rt] = 0;
-    if(mmin[lrt]>mmin[rrt])
+    if(mn1[lrt]==mn1[rrt])
     {
-        mmin[rt] = mmin[rrt];
-        minNum[rt]+=minNum[rrt];
-        minn[rt] = min(mmin[lrt],minn[rrt]);
-    }else if (mmin[lrt] < mmin[rrt])
+        mn1[rt]=mn1[lrt]; mnc[rt]=mnc[lrt]+mnc[rrt]; mn2[rt]=min(mn2[lrt],mn2[rrt]);
+    }else if(mn1[lrt]<mn1[rrt])
     {
-        mmin[rt] = mmin[lrt];
-        minNum[rt]+=minNum[lrt];
-        minn[rt] = min(mmin[rrt],minn[lrt]);
-    } else { 
-        mmin[rt] = mmin[lrt];
-        minNum[rt] = minNum[lrt] + minNum[rrt];
-        minn[rt] = min(mmin[lrt], minn[rrt]);
+        mn1[rt]=mn1[lrt]; mnc[rt]=mnc[lrt]; mn2[rt]=min(mn2[lrt],mn1[rrt]);
+    }else{
+        mn1[rt]=mn1[rrt]; mnc[rt]=mnc[rrt]; mn2[rt]=min(mn1[lrt],mn2[rrt]);
     }
+    mxBase[rt]=mx1[rt]; mnBase[rt]=mn1[rt]; // 剛 pushup 完，無 pending 標記，紀錄乾淨基準值
 }
 
 void pushdown(int rt,int len)
 {
-    int lrt = rt << 1, rrt = rt << 1|1;
-    int mid = (len) >> 1;
-    // 1. 優先下推加法標記 (lazy)
-    if (lazy[rt] != 0) {
-        ll k = lazy[rt];
-        sum[lrt] += k*(len-(len>>1));
-        mmax[lrt] += k;
-        if (maxx[lrt] != INT64_MIN) maxx[lrt] += k;
-        mmin[lrt] += k;
-        if (minn[lrt] != INT64_MAX) minn[lrt] += k;
-        lazy[lrt] += k;
-        sum[rrt] += k *(len>>1);
-        mmax[rrt] += k;
-        if (maxx[rrt] != INT64_MIN) maxx[rrt] += k;
-        mmin[rrt] += k;
-        if (minn[rrt] != INT64_MAX) minn[rrt] += k;
-        lazy[rrt] += k;
-        lazy[rt] = 0;
-    }
-    if(mmax[rt]<mmax[rrt])
-    {
-        sum[rrt]-=1ll*maxNum[rrt]*(mmax[rrt]-mmax[rt]);
-        if (mmin[rrt] == mmax[rrt]) mmin[rrt] = mmax[rt];
-        if (minn[rrt] == mmax[rrt]) minn[rrt] = mmax[rt];
-        mmax[rrt] = mmax[rt];
-    }
-    if(mmax[rt]<mmax[lrt])
-    {
-        sum[lrt]-=1ll*maxNum[lrt]*(mmax[lrt]-mmax[rt]);
-        if (mmin[lrt] == mmax[lrt]) mmin[lrt] = mmax[rt];
-        if (minn[lrt] == mmax[lrt]) minn[lrt] = mmax[rt];
-        mmax[lrt] = mmax[rt];
-    }
-
-    if(mmin[rt]>mmin[rrt])
-    {
-        sum[rrt]+=1ll*minNum[rrt]*(mmin[rt]-mmin[rrt]);
-        if (mmax[rrt] == mmin[rrt]) mmax[rrt] = mmin[rt];
-        if (maxx[rrt] == mmin[rrt]) maxx[rrt] = mmin[rt];
-        mmin[rrt] = mmin[rt];
-    }
-    if(mmin[rt]>mmin[lrt])
-    {
-        sum[lrt]+=1ll*minNum[lrt]*(mmin[rt]-mmin[lrt]);
-        if (mmax[lrt] == mmin[lrt]) mmax[lrt] = mmin[rt];
-        if (maxx[lrt] == mmin[lrt]) maxx[lrt] = mmin[rt];
-        mmin[lrt] = mmin[rt];
+    int lrt = rt<<1, rrt = rt<<1|1;
+    if (addAll[rt] || addMx[rt] || addMn[rt]) {
+        // 只有 mx1[child] 剛好等於 pushdown 前的基準值，才該拿 addMx (代表 child 真的持有那個最大值群組)
+        ll lmx = (mx1[lrt]==mxBase[rt]) ? addMx[rt] : 0;
+        ll lmn = (mn1[lrt]==mnBase[rt]) ? addMn[rt] : 0;
+        apply_(lrt, len-(len>>1), addAll[rt], lmx, lmn);
+        ll rmx = (mx1[rrt]==mxBase[rt]) ? addMx[rt] : 0;
+        ll rmn = (mn1[rrt]==mnBase[rt]) ? addMn[rt] : 0;
+        apply_(rrt, len>>1, addAll[rt], rmx, rmn);
+        addAll[rt] = addMx[rt] = addMn[rt] = 0;
     }
 }
 
 void build(int rt,int l,int r)
 {
-    lazy[rt] = 0;
+    addAll[rt]=addMx[rt]=addMn[rt]=0;
     if(l==r){
-        mmax[rt]=sum[rt]=mmin[rt]=wt[l];
-        maxx[rt] = INT64_MIN;
-        minn[rt] = INT64_MAX;
-        maxNum[rt] = 1;
-        minNum[rt] = 1;
+        mx1[rt]=sum[rt]=mn1[rt]=wt[l];
+        mx2[rt] = INT64_MIN;
+        mn2[rt] = INT64_MAX;
+        mxc[rt] = 1;
+        mnc[rt] = 1;
+        mxBase[rt] = mnBase[rt] = wt[l];
         return;
     }
     int mid=(l+r)>>1;
@@ -142,13 +128,13 @@ void qurey_max(int rt,int l,int r,int L,int R)
 {
     if(L<=l && r<=R)
     {
-        res = max(res,mmax[rt]);
+        res = max(res,mx1[rt]);
         return;
     }else{
         pushdown(rt,r-l+1);
         int mid=(l+r)>>1;
-        if(L<=mid)qurey(rt<<1,l,mid,L,R);
-        if(mid<R)qurey(rt<<1|1,mid+1,r,L,R);
+        if(L<=mid)qurey_max(rt<<1,l,mid,L,R);
+        if(mid<R)qurey_max(rt<<1|1,mid+1,r,L,R);
     }
 }
 
@@ -156,25 +142,22 @@ void qurey_min(int rt,int l,int r,int L,int R)
 {
     if(L<=l && r<=R)
     {
-        res = min(res,mmin[rt]);
+        res = min(res,mn1[rt]);
         return;
     }else{
         pushdown(rt,r-l+1);
         int mid=(l+r)>>1;
-        if(L<=mid)qurey(rt<<1,l,mid,L,R);
-        if(mid<R)qurey(rt<<1|1,mid+1,r,L,R);
+        if(L<=mid)qurey_min(rt<<1,l,mid,L,R);
+        if(mid<R)qurey_min(rt<<1|1,mid+1,r,L,R);
     }
 }
 
 void update_min(int rt,int l,int r,int L,int R,ll k)
-{   
-    if(mmax[rt]<=k)return;
-    if(L<=l && r<=R && k>maxx[rt])
+{
+    if(mx1[rt]<=k)return;
+    if(L<=l && r<=R && k>mx2[rt])
     {
-        sum[rt]-=1ll*maxNum[rt]*(mmax[rt]-k);
-        if (mmin[rt] == mmax[rt]) mmin[rt] = k;
-        if (minn[rt] == mmax[rt]) minn[rt] = k;
-        mmax[rt] = k;
+        apply_(rt, r-l+1, 0, k-mx1[rt], 0);
         return;
     }else{
         pushdown(rt,r-l+1);
@@ -186,14 +169,11 @@ void update_min(int rt,int l,int r,int L,int R,ll k)
 }
 
 void update_max(int rt,int l,int r,int L,int R,ll k)
-{   
-    if(mmin[rt]>=k)return;
-    if(L<=l && r<=R && k<minn[rt])
+{
+    if(mn1[rt]>=k)return;
+    if(L<=l && r<=R && k<mn2[rt])
     {
-        sum[rt]+=1ll*minNum[rt]*(k-mmin[rt]);
-        if (mmax[rt] == mmin[rt]) mmax[rt] = k;
-        if (maxx[rt] == mmin[rt]) maxx[rt] = k;
-        mmin[rt] = k;
+        apply_(rt, r-l+1, 0, 0, k-mn1[rt]);
         return;
     }else{
         pushdown(rt,r-l+1);
@@ -208,12 +188,7 @@ void update(int rt,int l,int r,int L,int R,ll k)
 {
     if(L<=l && r<=R)
     {
-        sum[rt]+=1ll*k*(r-l+1);
-        mmax[rt] += k;
-        if (maxx[rt] != INT64_MIN) maxx[rt] += k;
-        mmin[rt] += k;
-        if (minn[rt] != INT64_MAX) minn[rt] += k;
-        lazy[rt]+=k;
+        apply_(rt, r-l+1, k, 0, 0);
         return;
     }else{
         pushdown(rt,r-l+1);
@@ -259,5 +234,7 @@ for(int i = 1;i<=q;i++)
         qurey(1,1,n,x,y);
         cout << res << endl;
     }
+}
+return 0;
 }
 

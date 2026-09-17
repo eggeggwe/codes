@@ -1,5 +1,8 @@
 // 模板證明 by
 // 給定一張最初有m條邊的無向圖，接著有q個操作，每個操作要麼 新增 一條邊，要麼 刪除 一條邊。每個時刻我們都要能回答「目前圖中有幾個連通塊？」。由於q最多可達10^5，直接在線上（online）每次更新重跑 DFS 或 BFS 顯然過慢。
+// 正式名稱: 線段樹分治 (離線動態連通性，非持久化資料結構，命名易混淆注意)
+// 使用方法: 依序輸入 T 筆測資，每筆先給初始 m 條邊，再給 q 個操作 (N=新增，其他字元=刪除)
+// 注意: 節點需為 1..n，parent 陣列大小為 n+1
 #include <iostream>
 #include <algorithm>
 #include <cstdio>
@@ -8,6 +11,7 @@
 #include <stack>
 #include <string.h>
 #include <unordered_map>
+#include <cstdint>
 using namespace std;
 typedef long long ll;
 #define N 1000000
@@ -95,7 +99,7 @@ int main() {
     while (T--) {
         cin >> n >> m >> q;
         last.reserve(m+q);
-        parent.assign(n, -1);
+        parent.assign(n + 1, -1); // 節點可能是 1-indexed，多留一格避免越界
         components = n;
         while (!ops.empty()) ops.pop();
         op.clear();

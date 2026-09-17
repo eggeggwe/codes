@@ -5,100 +5,125 @@
 第一行两个整数n, k，表示元素数量和最大属性值。
 
 接下来n行，每行三个整数ai,bi,ci，分别表示三个属性值。
+
+CDQ 分治 + 樹狀陣列 (三維偏序模板，取代舊版「外層排序+內層動態開點線段樹」寫法)
+使用方法:
+  直接輸入 n, k 後接 n 行 (ai,bi,ci)，main() 會自動排序、去重、CDQ、輸出
+  對應 Luogu P3810
+原理:
+  1. 依 (x,y,z) 字典序排序，讓 x 相同的點自然按 y,z 排好，之後靠 CDQ 遞迴的「左半支配右半」
+     機制搭配去重代表點 (new_id 指向同組最後一個)，自動算出 x 相同時彼此互相支配的次數
+  2. 把排序後的位置本身當作新的 x (p[i].x=i)，CDQ 遞迴時用這個「排名」判斷左右半
+  3. 每層合併時依 y 排序，掃描時用樹狀陣列統計 z 維度，即可在 O(n log^2 n) 內算完
+注意: 完全重複 (x,y,z 全同) 的點會合併算一次代表點的答案，再透過 new_id 分給同組其他點
 */
 #include <iostream>
 #include <algorithm>
-
+#include <cstdio>
 using namespace std;
+#define N 1000010
+typedef long long ll;
 
-const int MAXN = 1e5 + 5;
-const int MAXK = 2e5;
+int n,k;
 
-int n, k, cnt[MAXN];
+struct point{
+    int x,y,z,id;
+}p[N];
 
-struct Data{
-    int x, y, z;
-    
-    int operator < (const Data &o) const {
-        return x != o.x ? (x < o.x) : (y != o.y ? (y < o.y) : (z < o.z));
-    }
-    
-    int operator == (const Data &o) const {
-        return x == o.x && y == o.y && z == o.z;
-    }
-}data[MAXN];
-
-struct Seg{
-    struct Node{
-        int val;
-        Node *ch[2];
-        
-        Node(int val = 0) : val(val) {
-            ch[0] = ch[1] = NULL;
-        }
-    };
-    
-    Node *rt;
-    
-    Seg() {
-        rt = NULL;
-    }
-    
-    void Modify(Node *&now, int pos, int val = 1, int nl = 1, int nr = MAXK) {
-        if (!now) now = new Node();
-        if (nl == nr) {
-            now->val += val;
-            return;
-        }
-        int mid = nl + nr >> 1;
-        if (pos <= mid) Modify(now->ch[0], pos, val, nl, mid);
-        else Modify(now->ch[1], pos, val, mid + 1, nr);
-        now->val = (now->ch[0] ? now->ch[0]->val : 0) + (now->ch[1] ? now->ch[1]->val : 0);
-    }
-    
-    int Query(Node *now, int l, int r, int nl = 1, int nr = MAXK) {
-        if (!now) return 0;
-        if (l == nl && r == nr) return now->val;
-        int mid = nl + nr >> 1;
-        if (r <= mid) return Query(now->ch[0], l, r, nl, mid);
-        else if (l > mid) return Query(now->ch[1], l, r, mid + 1, nr);
-        return Query(now->ch[0], l, mid, nl, mid) + Query(now->ch[1], mid + 1, r, mid + 1, nr);
-    }
-};
-
-Seg tree[MAXK * 4 + 5];
-
-void Modify(int now, int posx, int posy, int val, int nl = 1, int nr = MAXK) {
-    tree[now].Modify(tree[now].rt, posy, val);
-    if (nl == nr) return;
-    int mid = nl + nr >> 1;
-    if (posx <= mid) Modify(now << 1, posx, posy, val, nl, mid);
-    else Modify(now << 1 | 1, posx, posy, val, mid + 1, nr);
+int new_id[N],c[N<<2],b[N],f[N];
+bool cmp1(point a,point b)
+{
+    if(a.x!=b.x)
+    return a.x<b.x;
+    if(a.y!=b.y)
+    return a.y<b.y;
+    return a.z<b.z;
 }
 
-int Query(int now, int xl, int xr, int yl, int yr, int nl = 1, int nr = MAXK) {
-    if (xl == nl && xr == nr) return tree[now].Query(tree[now].rt, yl, yr);
-    int mid = nl + nr >> 1;
-    if (xr <= mid) return Query(now << 1, xl, xr, yl, yr, nl, mid);
-    else if (nl > mid) return Query(now << 1 | 1, xl, xr, yl, yr, mid + 1, nr);
-    return Query(now << 1, xl, mid, yl, yr, nl, mid) + Query(now << 1 | 1, mid + 1, xr, yl, yr, mid + 1, nr);
+bool cmp2(point a,point b)
+{
+    if(a.y!=b.y)
+    return a.y<b.y;
+    if(a.z!=b.z)
+    return a.z<b.z;
+    return a.x<b.x;
 }
 
-int main() {
-    cin >> n >> k;
-    for (int i = 1; i <= n; i++) cin >> data[i].x >> data[i].y >> data[i].z;
-    sort(data + 1, data + n + 1);
-    int sum = 1;
-    for (int i = 1; i <= n; i++) {
-        if (data[i + 1] == data[i]) {
-            sum++;
-            continue;
-        }
-        Modify(1, data[i].y, data[i].z, sum);
-        int res = Query(1, 1, data[i].y, 1, data[i].z);
-        cnt[res] += sum;
-        sum = 1;
+int lowbit(int x)
+{
+    return x&(-x);
+}
+
+void add(int x,int v)
+{
+    while(x<=k)
+    {
+        c[x]+=v,x+=lowbit(x);
     }
-    for (int i = 1; i <= n; i++) cout << cnt[i] << endl;
-    return 0;
+}
+
+int sum(int x)
+{
+    int ans = 0;
+    while(x)
+    {
+        ans+=c[x];
+        x-=lowbit(x);
+    }
+    return ans;
+}
+
+void cdq(int l,int r)
+{
+    if(l == r)return;
+    int mid = (l+r)>>1;
+    cdq(l,mid);
+    cdq(mid+1,r);
+    sort(p+l,p+1+r,cmp2);
+    for(int i = l;i<=r;i++)
+    {
+        if(p[i].x<=mid)
+        {
+            add(p[i].z,1);
+        }else{
+            b[p[i].id]+=sum(p[i].z);
+        }
+    }
+    for(int i = l;i<=r;i++)
+    {
+        if(p[i].x<=mid)
+            add(p[i].z,-1);
+    }
+}
+
+
+
+int main()
+{
+    cin >>n >> k;
+    for(int i = 1;i<=n;i++)
+    {
+        int a,b,c;
+        cin >> a >> b >> c;
+        p[i].x = a;
+        p[i].y = b;
+        p[i].z = c;
+        p[i].id = i;
+    }
+    sort(p+1,p+n+1,cmp1);
+    for(int i = 1;i<=n;)
+    {
+        int j = i+1;
+        while(j<=n&&p[i].x==p[j].x&&p[i].y==p[j].y&&p[i].z==p[j].z)
+            j++;
+        while(i<j)
+            new_id[p[i].id] = p[j-1].id,i++;
+    }
+    for(int i=1;i<=n;i++)
+		p[i].x=i;
+    cdq(1,n);
+    for(int i = 1;i<=n;i++)
+        f[b[new_id[p[i].id]]]++;
+    for(int i = 0;i<n;i++)
+        cout << f[i] << endl;
 }

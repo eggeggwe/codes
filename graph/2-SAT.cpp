@@ -1,6 +1,12 @@
 // 有  n  个布尔变量  x 1 ∼ x n ，另有  m  个需要满足的条件，每个条件的形式都是 「 x i   为  true  /  false  或  x j   为  true  /  false」。比如 「 x 1   为真或  x 3   为假」、「 x 7   为假或  x 2   为假」。
 
 // 2-SAT 问题的目标是给每个变量赋值使得所有条件得到满足。
+// 使用方法:
+//   wirte(...) 建圖規則: xi 若必須為 true 則連 (i+n)->i 等六種蘊含邊 (見程式碼中判斷式)
+//   對 1..2n 每個未走訪節點跑 tarjan(i) 找 SCC
+//   若 color[i]==color[i+n] 表示 xi 與 not xi 同一分量 -> 無解 (IMPOSSIBLE)
+//   否則 color[i]<color[i+n] 即為 xi 的真值指派
+// 注意: 節點 1..n 代表 xi 為真，n+1..2n 代表 xi 為假
 #include<iostream>
 #include<stdio.h>
 #include<stack>

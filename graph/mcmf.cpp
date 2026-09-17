@@ -1,3 +1,12 @@
+// MCMF (SPFA 版): 最小費用最大流
+// 用途: 求 s 到 t 的最大流量，以及達到該流量下的最小花費
+// 複雜度: O(V*E) 每輪增廣, 視資料量可能較慢 (若圖大建議改 Dijkstra+勢能版)
+// 使用方法:
+//   MCMF f; f.init(n, s, t)           初始化
+//   f.add_edge(u, v, val, cost)       加一條 u->v 容量 val、單位花費 cost 的邊
+//   auto [max_flow, min_cost] = f.solve()
+// 注意: 若要求「限定流量下的最小花費」而非「最大流最小費」，需自行在 solve() 迴圈內按流量提前跳出
+
 struct MCMF{
     struct edge{
         ll v,flow,rv_id,cost;

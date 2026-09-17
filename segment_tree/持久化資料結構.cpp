@@ -1,4 +1,10 @@
 // n 个整数构成的序列  a，将对于指定的闭区间  [l, r] 查询其区间内的第  k 小值。
+// 使用方法:
+//   Hash[]=排序去重後的離散化陣列, size=去重後大小
+//   T[0]=build(1,size)                版本0 (空樹)
+//   T[i]=update(T[i-1],1,size,x)      在前一版本插入 a[i] 離散化後的位置 x
+//   query(T[l-1],T[r],1,size,k)       查詢區間 [l,r] 第 k 小
+// 注意: 下標從1開始
 
 #include<iostream>
 #include<algorithm>

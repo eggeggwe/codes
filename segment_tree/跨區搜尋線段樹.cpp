@@ -2,6 +2,11 @@
 
 // 1 L R: Flip each of the L-th to R-th characters of  S. That is, for each integer  i  satisfying  L ≤ i ≤ R, change the  i-th character of  S  to  0  if it is  1, and vice versa.
 // 2 L R: Let S  be the string of length  (R − L + 1)  obtained by extracting the  L-th to  R-th characters of  S  (without changing the order). Print  Yes  if  S ′  is a good string and  No  otherwise.
+// 對應題型: AtCoder Library Practice Contest J (交替字串)
+// 使用方法:
+//   build(1,1,n)                  初始化，input[1..n] 為 0/1 字串
+//   update(1,1,n,l,r)              區間 [l,r] 整段翻轉 (0與1互換)
+//   qurey(1,1,n,l,r).amax==r-l+1   判斷 [l,r] 是否為交替字串
 #include<iostream>
 #include<algorithm>
 #include<stdio.h>

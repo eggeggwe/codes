@@ -1,4 +1,8 @@
 /*n 个点 m 条边有向图,每个点有一个权值，求一条路径，使路径经过的点权值之和最大。你只需要求出这个权值和。*/
+// 使用方法:
+//   TarjanSCC t(n); t.dfs(i, graph)     對每個未走訪點跑 dfs 找 SCC (0-indexed)
+//   t.build(graph)                       建構縮點後的 DAG (t.SCC[scc_id])
+//   之後對 t.SCC 拓樸排序做 DP 即可
 #include <iostream>
 #include <vector>
 #include <stack>
